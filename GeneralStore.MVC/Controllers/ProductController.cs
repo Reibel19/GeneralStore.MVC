@@ -1,7 +1,9 @@
 ﻿using GeneralStore.MVC.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Mvc;
 
@@ -15,7 +17,9 @@ namespace GeneralStore.MVC.Controllers
         // GET: Product
         public ActionResult Index()
         {
-            return View(_db.Products.ToList());
+            List<Product> productList = _db.Products.ToList();
+            List<Product> orderedList = productList.OrderBy(prod => prod.Name).ToList();
+            return View(orderedList);
         }
 
         // Get: Product
@@ -44,7 +48,7 @@ namespace GeneralStore.MVC.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             Product product = _db.Products.Find(id);
             if (product == null)
@@ -54,7 +58,64 @@ namespace GeneralStore.MVC.Controllers
             return View(product);
         }
 
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        //Post: delete
+        // product/delete/{id}
+        public ActionResult Delete(int id)
+        {
+            Product product = _db.Products.Find(id);
+            _db.Products.Remove(product);
+            _db.SaveChanges();
+            return RedirectToAction("Index");
+        }
 
+        //GET: Edit
+        // product/edit/{id}
+        public ActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Product product = _db.Products.Find(id);
+            if (product == null)
+            {
+                return HttpNotFound();
+            }
+            return View(product);
+        }
+
+        //post: edit
+        // product/edit/{id}
+        [HttpPost, ActionName("Edit")]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(Product product)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Entry(product).State = EntityState.Modified;
+                _db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            return View(product);
+        }
+
+        //Get : Details
+        // Product/details/{id}
+        public ActionResult Details(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Product product = _db.Products.Find(id);
+            if (product == null)
+            {
+                return HttpNotFound();
+            }
+            return View(product);
+        }
 
     }
 }
